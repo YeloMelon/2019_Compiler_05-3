@@ -633,255 +633,265 @@ public class BytecodeGenListener extends MiniCBaseListener implements ParseTreeL
 		
 		//indent?
 		
-		if (symbolTable.getVarType(idName) == Type.DOUBLE) {
-			switch (ctx.getChild(1).getText()) {
-			case "*":
-				expr += "dmul \n"; break;
-			case "/":
-				expr += "ddiv \n"; break;
-			case "%":
-				expr += "drem \n"; break;
-			case "+":		// expr(0) expr(1) iadd
-				expr += "dadd \n"; break;
-			case "-":
-				expr += "dsub \n"; break;
+		if(symbolTable.getVarType(ctx.expr(0).IDENT().getText()) == symbolTable.getVarType(ctx.expr(1).IDENT().getText())) {
+			if (symbolTable.getVarType(idName) == Type.DOUBLE) {
+				switch (ctx.getChild(1).getText()) {
+				case "*":
+					expr += "dmul \n"; break;
+				case "/":
+					expr += "ddiv \n"; break;
+				case "%":
+					expr += "drem \n"; break;
+				case "+":		// expr(0) expr(1) iadd
+					expr += "dadd \n"; break;
+				case "-":
+					expr += "dsub \n"; break;
+					
+				case "==":
+					expr += "dsub " + "\n"
+							+ "ifeq l2"+ "\n"
+							+ "ldc 0" + "\n"
+							+ "goto " + lend + "\n"
+							+ l2 + ": " + "ldc 1" + "\n"
+							+ lend + ": " + "\n";
+					break;
+				case "!=":
+					expr += "dsub " + "\n"
+							+ "ifne l2"+ "\n"
+							+ "ldc 0" + "\n"
+							+ "goto " + lend + "\n"
+							+ l2 + ": " + "ldc 1" + "\n"
+							+ lend + ": " + "\n";
+					break;
+				case "<=":
+					// <(5) Fill here>
+					expr += "dsub " + "\n"
+							+ "ifle " + l2 + "\n"
+							+ "ldc 0" + "\n"
+							+ "goto " + lend + "\n"
+							+ l2 + ": \n" + "ldc 1" + "\n"
+							+ lend + ": " + "\n";
+					
+					break;
+				case "<":
+					// <(6) Fill here>
+					expr += "dsub " + "\n"
+							+ "iflt " + l2 + "\n"
+							+ "ldc 0" + "\n"
+							+ "goto " + lend + "\n"
+							+ l2 + ": \n" + "ldc 1" + "\n"
+							+ lend + ": " + "\n";
+					break;
+
+				case ">=":
+					// <(7) Fill here>
+					expr += "dsub " + "\n"
+							+ "ifge " + l2 + "\n"
+							+ "ldc 0" + "\n"
+							+ "goto " + lend + "\n"
+							+ l2 + ": \n" + "ldc 1" + "\n"
+							+ lend + ": " + "\n";
+
+					break;
+
+				case ">":
+					// <(8) Fill here>
+					expr += "dsub " + "\n"
+							+ "ifge " + l2 + "\n"
+							+ "ldc 0" + "\n"
+							+ "goto " + lend + "\n"
+							+ l2 + ": \n" + "ldc 1" + "\n"
+							+ lend + ": " + "\n";
+					break;
+
+				case "and":
+					expr +=  "ifne "+ lend + "\n"
+							+ "pop" + "\n" + "ldc 0" + "\n"
+							+ lend + ": " + "\n"; break;
+				case "or":
+					// <(9) Fill here>
+					//ldc 1
+					expr +=  "ifeq "+ lend + "\n"
+							+ "pop" + "\n" + "ldc 1" + "\n"
+							+ lend + ": " + "\n";
+					break;
+
+			}
+			} else if (symbolTable.getVarType(idName) == Type.FLOAT) {
+				switch (ctx.getChild(1).getText()) {
+				case "*":
+					expr += "fmul \n"; break;
+				case "/":
+					expr += "fdiv \n"; break;
+				case "%":
+					expr += "frem \n"; break;
+				case "+":		// expr(0) expr(1) iadd
+					expr += "fadd \n"; break;
+				case "-":
+					expr += "fsub \n"; break;
+					
+				case "==":
+					expr += "fsub " + "\n"
+							+ "ifeq l2"+ "\n"
+							+ "ldc 0" + "\n"
+							+ "goto " + lend + "\n"
+							+ l2 + ": " + "ldc 1" + "\n"
+							+ lend + ": " + "\n";
+					break;
+				case "!=":
+					expr += "fsub " + "\n"
+							+ "ifne l2"+ "\n"
+							+ "ldc 0" + "\n"
+							+ "goto " + lend + "\n"
+							+ l2 + ": " + "ldc 1" + "\n"
+							+ lend + ": " + "\n";
+					break;
+				case "<=":
+					// <(5) Fill here>
+					expr += "fsub " + "\n"
+							+ "ifle " + l2 + "\n"
+							+ "ldc 0" + "\n"
+							+ "goto " + lend + "\n"
+							+ l2 + ": \n" + "ldc 1" + "\n"
+							+ lend + ": " + "\n";
+					
+					break;
+				case "<":
+					// <(6) Fill here>
+					expr += "fsub " + "\n"
+							+ "iflt " + l2 + "\n"
+							+ "ldc 0" + "\n"
+							+ "goto " + lend + "\n"
+							+ l2 + ": \n" + "ldc 1" + "\n"
+							+ lend + ": " + "\n";
+					break;
+
+				case ">=":
+					// <(7) Fill here>
+					expr += "fsub " + "\n"
+							+ "ifge " + l2 + "\n"
+							+ "ldc 0" + "\n"
+							+ "goto " + lend + "\n"
+							+ l2 + ": \n" + "ldc 1" + "\n"
+							+ lend + ": " + "\n";
+
+					break;
+
+				case ">":
+					// <(8) Fill here>
+					expr += "fsub " + "\n"
+							+ "ifge " + l2 + "\n"
+							+ "ldc 0" + "\n"
+							+ "goto " + lend + "\n"
+							+ l2 + ": \n" + "ldc 1" + "\n"
+							+ lend + ": " + "\n";
+					break;
+
+				case "and":
+					expr +=  "ifne "+ lend + "\n"
+							+ "pop" + "\n" + "ldc 0" + "\n"
+							+ lend + ": " + "\n"; break;
+				case "or":
+					// <(9) Fill here>
+					//ldc 1
+					expr +=  "ifeq "+ lend + "\n"
+							+ "pop" + "\n" + "ldc 1" + "\n"
+							+ lend + ": " + "\n";
+					break;
+
+			}
+			}
+			else {
+				switch (ctx.getChild(1).getText()) {
+				case "*":
+					expr += "imul \n"; break;
+				case "/":
+					expr += "idiv \n"; break;
+				case "%":
+					expr += "irem \n"; break;
+				case "+":		// expr(0) expr(1) iadd
+					expr += "iadd \n"; break;
+				case "-":
+					expr += "isub \n"; break;
+					
+				case "==":
+					expr += "isub " + "\n"
+							+ "ifeq l2"+ "\n"
+							+ "ldc 0" + "\n"
+							+ "goto " + lend + "\n"
+							+ l2 + ": " + "ldc 1" + "\n"
+							+ lend + ": " + "\n";
+					break;
+				case "!=":
+					expr += "isub " + "\n"
+							+ "ifne l2"+ "\n"
+							+ "ldc 0" + "\n"
+							+ "goto " + lend + "\n"
+							+ l2 + ": " + "ldc 1" + "\n"
+							+ lend + ": " + "\n";
+					break;
+				case "<=":
+					// <(5) Fill here>
+					expr += "isub " + "\n"
+							+ "ifle " + l2 + "\n"
+							+ "ldc 0" + "\n"
+							+ "goto " + lend + "\n"
+							+ l2 + ": \n" + "ldc 1" + "\n"
+							+ lend + ": " + "\n";
+					
+					break;
+				case "<":
+					// <(6) Fill here>
+					expr += "isub " + "\n"
+							+ "iflt " + l2 + "\n"
+							+ "ldc 0" + "\n"
+							+ "goto " + lend + "\n"
+							+ l2 + ": \n" + "ldc 1" + "\n"
+							+ lend + ": " + "\n";
+					break;
+
+				case ">=":
+					// <(7) Fill here>
+					expr += "isub " + "\n"
+							+ "ifge " + l2 + "\n"
+							+ "ldc 0" + "\n"
+							+ "goto " + lend + "\n"
+							+ l2 + ": \n" + "ldc 1" + "\n"
+							+ lend + ": " + "\n";
+
+					break;
+
+				case ">":
+					// <(8) Fill here>
+					expr += "isub " + "\n"
+							+ "ifge " + l2 + "\n"
+							+ "ldc 0" + "\n"
+							+ "goto " + lend + "\n"
+							+ l2 + ": \n" + "ldc 1" + "\n"
+							+ lend + ": " + "\n";
+					break;
+
+				case "and":
+					expr +=  "ifne "+ lend + "\n"
+							+ "pop" + "\n" + "ldc 0" + "\n"
+							+ lend + ": " + "\n"; break;
+				case "or":
+					// <(9) Fill here>
+					//ldc 1
+					expr +=  "ifeq "+ lend + "\n"
+							+ "pop" + "\n" + "ldc 1" + "\n"
+							+ lend + ": " + "\n";
+					break;
+
+			}
 				
-			case "==":
-				expr += "dsub " + "\n"
-						+ "ifeq l2"+ "\n"
-						+ "ldc 0" + "\n"
-						+ "goto " + lend + "\n"
-						+ l2 + ": " + "ldc 1" + "\n"
-						+ lend + ": " + "\n";
-				break;
-			case "!=":
-				expr += "dsub " + "\n"
-						+ "ifne l2"+ "\n"
-						+ "ldc 0" + "\n"
-						+ "goto " + lend + "\n"
-						+ l2 + ": " + "ldc 1" + "\n"
-						+ lend + ": " + "\n";
-				break;
-			case "<=":
-				// <(5) Fill here>
-				expr += "dsub " + "\n"
-						+ "ifle " + l2 + "\n"
-						+ "ldc 0" + "\n"
-						+ "goto " + lend + "\n"
-						+ l2 + ": \n" + "ldc 1" + "\n"
-						+ lend + ": " + "\n";
-				
-				break;
-			case "<":
-				// <(6) Fill here>
-				expr += "dsub " + "\n"
-						+ "iflt " + l2 + "\n"
-						+ "ldc 0" + "\n"
-						+ "goto " + lend + "\n"
-						+ l2 + ": \n" + "ldc 1" + "\n"
-						+ lend + ": " + "\n";
-				break;
-
-			case ">=":
-				// <(7) Fill here>
-				expr += "dsub " + "\n"
-						+ "ifge " + l2 + "\n"
-						+ "ldc 0" + "\n"
-						+ "goto " + lend + "\n"
-						+ l2 + ": \n" + "ldc 1" + "\n"
-						+ lend + ": " + "\n";
-
-				break;
-
-			case ">":
-				// <(8) Fill here>
-				expr += "dsub " + "\n"
-						+ "ifge " + l2 + "\n"
-						+ "ldc 0" + "\n"
-						+ "goto " + lend + "\n"
-						+ l2 + ": \n" + "ldc 1" + "\n"
-						+ lend + ": " + "\n";
-				break;
-
-			case "and":
-				expr +=  "ifne "+ lend + "\n"
-						+ "pop" + "\n" + "ldc 0" + "\n"
-						+ lend + ": " + "\n"; break;
-			case "or":
-				// <(9) Fill here>
-				//ldc 1
-				expr +=  "ifeq "+ lend + "\n"
-						+ "pop" + "\n" + "ldc 1" + "\n"
-						+ lend + ": " + "\n";
-				break;
-
 		}
-		} else if (symbolTable.getVarType(idName) == Type.FLOAT) {
-			switch (ctx.getChild(1).getText()) {
-			case "*":
-				expr += "fmul \n"; break;
-			case "/":
-				expr += "fdiv \n"; break;
-			case "%":
-				expr += "frem \n"; break;
-			case "+":		// expr(0) expr(1) iadd
-				expr += "fadd \n"; break;
-			case "-":
-				expr += "fsub \n"; break;
-				
-			case "==":
-				expr += "fsub " + "\n"
-						+ "ifeq l2"+ "\n"
-						+ "ldc 0" + "\n"
-						+ "goto " + lend + "\n"
-						+ l2 + ": " + "ldc 1" + "\n"
-						+ lend + ": " + "\n";
-				break;
-			case "!=":
-				expr += "fsub " + "\n"
-						+ "ifne l2"+ "\n"
-						+ "ldc 0" + "\n"
-						+ "goto " + lend + "\n"
-						+ l2 + ": " + "ldc 1" + "\n"
-						+ lend + ": " + "\n";
-				break;
-			case "<=":
-				// <(5) Fill here>
-				expr += "fsub " + "\n"
-						+ "ifle " + l2 + "\n"
-						+ "ldc 0" + "\n"
-						+ "goto " + lend + "\n"
-						+ l2 + ": \n" + "ldc 1" + "\n"
-						+ lend + ": " + "\n";
-				
-				break;
-			case "<":
-				// <(6) Fill here>
-				expr += "fsub " + "\n"
-						+ "iflt " + l2 + "\n"
-						+ "ldc 0" + "\n"
-						+ "goto " + lend + "\n"
-						+ l2 + ": \n" + "ldc 1" + "\n"
-						+ lend + ": " + "\n";
-				break;
-
-			case ">=":
-				// <(7) Fill here>
-				expr += "fsub " + "\n"
-						+ "ifge " + l2 + "\n"
-						+ "ldc 0" + "\n"
-						+ "goto " + lend + "\n"
-						+ l2 + ": \n" + "ldc 1" + "\n"
-						+ lend + ": " + "\n";
-				break;
-
-			case ">":
-				// <(8) Fill here>
-				expr += "fsub " + "\n"
-						+ "ifge " + l2 + "\n"
-						+ "ldc 0" + "\n"
-						+ "goto " + lend + "\n"
-						+ l2 + ": \n" + "ldc 1" + "\n"
-						+ lend + ": " + "\n";
-				break;
-
-			case "and":
-				expr +=  "ifne "+ lend + "\n"
-						+ "pop" + "\n" + "ldc 0" + "\n"
-						+ lend + ": " + "\n"; break;
-			case "or":
-				// <(9) Fill here>
-				//ldc 1
-				expr +=  "ifeq "+ lend + "\n"
-						+ "pop" + "\n" + "ldc 1" + "\n"
-						+ lend + ": " + "\n";
-				break;
-
-		}
+			
+		//indent?
+		
 		}
 		else {
-			switch (ctx.getChild(1).getText()) {
-			case "*":
-				expr += "imul \n"; break;
-			case "/":
-				expr += "idiv \n"; break;
-			case "%":
-				expr += "irem \n"; break;
-			case "+":		// expr(0) expr(1) iadd
-				expr += "iadd \n"; break;
-			case "-":
-				expr += "isub \n"; break;
-				
-			case "==":
-				expr += "isub " + "\n"
-						+ "ifeq l2"+ "\n"
-						+ "ldc 0" + "\n"
-						+ "goto " + lend + "\n"
-						+ l2 + ": " + "ldc 1" + "\n"
-						+ lend + ": " + "\n";
-				break;
-			case "!=":
-				expr += "isub " + "\n"
-						+ "ifne l2"+ "\n"
-						+ "ldc 0" + "\n"
-						+ "goto " + lend + "\n"
-						+ l2 + ": " + "ldc 1" + "\n"
-						+ lend + ": " + "\n";
-				break;
-			case "<=":
-				// <(5) Fill here>
-				expr += "isub " + "\n"
-						+ "ifle " + l2 + "\n"
-						+ "ldc 0" + "\n"
-						+ "goto " + lend + "\n"
-						+ l2 + ": \n" + "ldc 1" + "\n"
-						+ lend + ": " + "\n";
-				
-				break;
-			case "<":
-				// <(6) Fill here>
-				expr += "isub " + "\n"
-						+ "iflt " + l2 + "\n"
-						+ "ldc 0" + "\n"
-						+ "goto " + lend + "\n"
-						+ l2 + ": \n" + "ldc 1" + "\n"
-						+ lend + ": " + "\n";
-				break;
-
-			case ">=":
-				// <(7) Fill here>
-				expr += "isub " + "\n"
-						+ "ifge " + l2 + "\n"
-						+ "ldc 0" + "\n"
-						+ "goto " + lend + "\n"
-						+ l2 + ": \n" + "ldc 1" + "\n"
-						+ lend + ": " + "\n";
-
-				break;
-
-			case ">":
-				// <(8) Fill here>
-				expr += "isub " + "\n"
-						+ "ifge " + l2 + "\n"
-						+ "ldc 0" + "\n"
-						+ "goto " + lend + "\n"
-						+ l2 + ": \n" + "ldc 1" + "\n"
-						+ lend + ": " + "\n";
-				break;
-
-			case "and":
-				expr +=  "ifne "+ lend + "\n"
-						+ "pop" + "\n" + "ldc 0" + "\n"
-						+ lend + ": " + "\n"; break;
-			case "or":
-				// <(9) Fill here>
-				//ldc 1
-				expr +=  "ifeq "+ lend + "\n"
-						+ "pop" + "\n" + "ldc 1" + "\n"
-						+ lend + ": " + "\n";
-				break;
-
-		}
+			System.out.println("<error binary op type invalid at " + idName + ">");
 		}
 		
 		return expr;
