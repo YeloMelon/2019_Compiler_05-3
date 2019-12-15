@@ -29,12 +29,8 @@ stmt		: expr_stmt
 		| return_stmt			;
 expr_stmt	: expr ';'			;
 while_stmt	: WHILE '(' expr ')' stmt	;
-//for_stmt	: FOR '(' type_spec? expr ';' expr ';' expr ')' stmt	;
 for_stmt : FOR '(' cond_stmt ')' compound_stmt       ;
 cond_stmt : expr? ';' expr ';' expr?	;
-//       | ';' expr ';' expr
-//       | ';' expr ';'
-//       | expr ';' expr ';';
 compound_stmt: '{' local_decl* stmt* '}'	;
 local_decl	: type_spec IDENT ';'
 		| type_spec IDENT '=' LITERAL ';'	
@@ -67,7 +63,6 @@ expr	:  LITERAL
 	| expr AND expr				 
 	| expr OR expr		
 	| IDENT '=' expr		
-//	| type_spec IDENT '=' expr
 	| IDENT '[' expr ']' '=' expr		;
 args	: expr (',' expr)*			 
 	|					 ;

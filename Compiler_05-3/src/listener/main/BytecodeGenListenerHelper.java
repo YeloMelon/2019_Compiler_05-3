@@ -63,7 +63,6 @@ public class BytecodeGenListenerHelper {
             return Integer.parseInt(value);
         case DOUBLE:
             return Double.parseDouble(value);
-        
         case FLOAT:
             return Float.parseFloat(value);
         default:

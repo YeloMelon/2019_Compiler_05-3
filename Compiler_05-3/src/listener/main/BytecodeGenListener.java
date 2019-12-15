@@ -56,8 +56,6 @@ public class BytecodeGenListener extends MiniCBaseListener implements ParseTreeL
 			else {
 				symbolTable.putGlobalVarWithInitVal(varName, Type.INT, initVal(ctx, Type.INT));
 			}
-			
-			
 		}
 		else  { // simple decl
 			if (ctx.type_spec().getText().equals("double")) {
@@ -69,7 +67,6 @@ public class BytecodeGenListener extends MiniCBaseListener implements ParseTreeL
 			else {
 				symbolTable.putGlobalVar(varName, Type.INT);
 			}
-			
 		}
 	}
 
@@ -776,7 +773,6 @@ public class BytecodeGenListener extends MiniCBaseListener implements ParseTreeL
 						+ "goto " + lend + "\n"
 						+ l2 + ": \n" + "ldc 1" + "\n"
 						+ lend + ": " + "\n";
-
 				break;
 
 			case ">":

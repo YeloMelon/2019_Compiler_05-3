@@ -126,13 +126,10 @@ public class SymbolTable {
 		
 		if(ctx.type_spec().getText().equals("void"))
 			rtype += "V";//add()V
-		
 		else if (ctx.type_spec().getText().equals("double"))
 			rtype += "D";
-		
 		else if (ctx.type_spec().getText().equals("float"))
 			rtype += "F";
-		
 		else
 			rtype += "I";//add()I
 
