@@ -27,8 +27,20 @@ public class BytecodeGenListenerHelper {
 	}
 	
 	// global vars
-	static int initVal(Var_declContext ctx) {
-		return Integer.parseInt(ctx.LITERAL().getText());
+	static Object initVal(Var_declContext ctx, SymbolTable.Type type) {
+		 String value = ctx.LITERAL().getText();
+	        switch (type) {
+	            case INT:
+	                return Integer.parseInt(value);
+	            case DOUBLE:
+	                return Double.parseDouble(value);
+	            case FLOAT:
+	                return Float.parseFloat(value);
+	            default:
+//	            	System.out.println("<ERROR: init value not valid>");
+	                return value;
+	       }
+		
 	}
 
 	// var_decl	: type_spec IDENT '=' LITERAL ';
@@ -42,8 +54,21 @@ public class BytecodeGenListenerHelper {
 
 	// <local vars>
 	// local_decl	: type_spec IDENT '[' LITERAL ']' ';'
-	static int initVal(Local_declContext ctx) {
-		return Integer.parseInt(ctx.LITERAL().getText());
+	static Object initVal(Local_declContext ctx,  SymbolTable.Type type) {
+		
+		 String value = ctx.LITERAL().getText();
+	
+		switch (type) {
+        case INT:
+            return Integer.parseInt(value);
+        case DOUBLE:
+            return Double.parseDouble(value);
+        
+        case FLOAT:
+            return Float.parseFloat(value);
+        default:
+            return value;
+		}
 	}
 
 	static boolean isArrayDecl(Local_declContext ctx) {
@@ -89,6 +114,8 @@ public class BytecodeGenListenerHelper {
 		
 		else if(type.compareTo("double") == 0)
 			return "D";
+		else if(type.compareTo("float") == 0)
+			return "F";
 		
 		//other cases left for else statements 
 		return "";
@@ -104,9 +131,10 @@ public class BytecodeGenListenerHelper {
 	static Type getParamType(ParamContext param) {
 		if(param.getChild(0).getText().equals("int"))
 			return Type.INT;
-		
 		else if(param.getChild(0).getText().equals("double"))
 			return Type.DOUBLE;
+		else if(param.getChild(0).getText().equals("float"))
+			return Type.FLOAT;
 		
 		return null;
 	}

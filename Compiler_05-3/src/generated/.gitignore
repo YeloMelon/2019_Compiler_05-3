@@ -5,3 +5,5 @@
 /MiniCListener.java
 /MiniCParser.java
 /MiniCPrintListener.java
+/MiniC.interp
+/MiniCLexer.interp

@@ -49,10 +49,16 @@ public class BytecodeGenListener extends MiniCBaseListener implements ParseTreeL
 			
 			if (ctx.type_spec().getText().equals("double")) {
 				
-				symbolTable.putGlobalVarWithInitVal(varName, Type.DOUBLE, initVal(ctx));
+				symbolTable.putGlobalVarWithInitVal(varName, Type.DOUBLE, initVal(ctx ,Type.DOUBLE ));
 				
-			} else {
-				symbolTable.putGlobalVarWithInitVal(varName, Type.INT, initVal(ctx));
+			} 
+			else if (ctx.type_spec().getText().equals("float")) {
+				
+				symbolTable.putGlobalVarWithInitVal(varName, Type.FLOAT, initVal(ctx, Type.FLOAT));
+				
+			} 
+			else {
+				symbolTable.putGlobalVarWithInitVal(varName, Type.INT, initVal(ctx, Type.FLOAT));
 
 			}
 			
@@ -61,7 +67,11 @@ public class BytecodeGenListener extends MiniCBaseListener implements ParseTreeL
 		else  { // simple decl
 			if (ctx.type_spec().getText().equals("double")) {
 				symbolTable.putGlobalVar(varName, Type.DOUBLE);
-			} else {
+			} 
+			else if (ctx.type_spec().getText().equals("float")) {
+				symbolTable.putGlobalVar(varName, Type.FLOAT);
+			} 
+			else {
 				symbolTable.putGlobalVar(varName, Type.INT);
 			}
 			
@@ -76,9 +86,13 @@ public class BytecodeGenListener extends MiniCBaseListener implements ParseTreeL
 		}
 		else if (isDeclWithInit(ctx)) {
 			if (ctx.type_spec().getText().equals("double")) {
-				symbolTable.putLocalVarWithInitVal(getLocalVarName(ctx), Type.DOUBLE, initVal(ctx));	
-			} else {
-				symbolTable.putLocalVarWithInitVal(getLocalVarName(ctx), Type.INT, initVal(ctx));	
+				symbolTable.putLocalVarWithInitVal(getLocalVarName(ctx), Type.DOUBLE, initVal(ctx, Type.DOUBLE));	
+			} 
+			else if (ctx.type_spec().getText().equals("float")) {
+				symbolTable.putLocalVarWithInitVal(getLocalVarName(ctx), Type.FLOAT, initVal(ctx, Type.FLOAT));	
+			} 
+			else {
+				symbolTable.putLocalVarWithInitVal(getLocalVarName(ctx), Type.INT, initVal(ctx, Type.INT));	
 			}
 			
 		}
@@ -86,7 +100,11 @@ public class BytecodeGenListener extends MiniCBaseListener implements ParseTreeL
 			
 			if (ctx.type_spec().getText().equals("double")) {
 				symbolTable.putLocalVar(getLocalVarName(ctx), Type.DOUBLE);
-			} else {
+			}
+			else if (ctx.type_spec().getText().equals("float")) {
+				symbolTable.putLocalVar(getLocalVarName(ctx), Type.FLOAT);
+			}
+			else {
 				symbolTable.putLocalVar(getLocalVarName(ctx), Type.INT);
 			}
 			
@@ -198,39 +216,50 @@ public class BytecodeGenListener extends MiniCBaseListener implements ParseTreeL
 		newTexts.put(ctx, stmt);
 	}
 	
-	// for_stmt	: for '(' expr ';' expr ';' expr ')' stmt
+	// for_stmt	: FOR '(' cond_stmt ')' stmt
 	@Override
 	public void exitFor_stmt(MiniCParser.For_stmtContext ctx) {
 			// <(1) Fill here!>
-		
+        MiniCParser.Cond_stmtContext condStmt = ctx.cond_stmt();
+
 		String stmt = "";
-		String expr = newTexts.get(ctx.expr());
-		String bodystmt = newTexts.get(ctx.stmt());
+		String initExpr = "";
+		String condExpr = "";
+		String incrExpr = "";
+		
+		int conds = 0;
+		if (condStmt.getChild(0).getText().equals(";"))
+			conds = 1;
+
+		if (conds == 0)
+			initExpr = newTexts.get(condStmt.expr(0-conds)) + "\n";
+		condExpr = newTexts.get(condStmt.expr(1-conds)) + "\n";
+		if (2-conds < condStmt.getChildCount())
+			incrExpr = newTexts.get(condStmt.expr(2-conds)) + "\n";
+
+		String bodystmt = newTexts.get(ctx.compound_stmt());
 		
 		String lend = symbolTable.newLabel(); //exit
 		String lelse = symbolTable.newLabel(); //goto 
 		
-			
-		if (ctx.getChildCount() == 5) {
-			// while_stmt	: WHILE '(' expr ')' stmt
-			
-			stmt += lelse //spot l2
-					+ ": \n" 
-					+ expr //check
-					+ "ifeq " 
-					+ lend //exit if eq
-					+ "\n" 
-					+ bodystmt //do
-					+ "goto " 
-					+ lelse //goto l2
-					+ "\n"
-					+ lend // exit
-					+ ": \n";
-		}
-		newTexts.put(ctx, stmt);
+		// for_stmt	: FOR '(' cond_stmt ')' stmt
+		stmt += initExpr
+				+ lelse //spot l2
+				+ ": \n" 
+				+ condExpr //check
+				+ "ifeq " 
+				+ lend //exit if eq
+				+ "\n" 
+				+ bodystmt //do
+				+ incrExpr
+				+ "goto " 
+				+ lelse //goto l2
+				+ "\n"
+				+ lend // exit
+				+ ": \n";
+		
 		newTexts.put(ctx, stmt);
 	}
-	
 	
 	// type_spec IDENT '(' params ')' compound_stmt
 	@Override
@@ -279,12 +308,45 @@ public class BytecodeGenListener extends MiniCBaseListener implements ParseTreeL
 	@Override
 	public void exitLocal_decl(MiniCParser.Local_declContext ctx) {
 		String varDecl = "";
-		
-		if (isDeclWithInit(ctx)) {
-			symbolTable.putLocalVarWithInitVal(getLocalVarName(ctx), Type.INT, initVal(ctx));
-			String vId = symbolTable.getVarId(ctx);
-			varDecl += "ldc " + ctx.LITERAL().getText() + "\n"
-					+ "istore_" + vId + "\n"; 			
+		if(isDeclWithInit(ctx)) {
+			if (ctx.getChild(0).getText().equals("int")) {
+				symbolTable.putLocalVarWithInitVal(getLocalVarName(ctx), Type.INT, initVal(ctx, Type.INT));
+				String vId = symbolTable.getVarId(ctx);
+				varDecl += "ldc " + ctx.LITERAL().getText() + "\n"
+						+ "istore_" + vId + "\n"; 			
+			}
+			else if (ctx.getChild(0).getText().equals("float")) {
+				symbolTable.putLocalVarWithInitVal(getLocalVarName(ctx), Type.FLOAT, initVal(ctx, Type.FLOAT));
+				String vId = symbolTable.getVarId(ctx);
+				varDecl += "ldc " + ctx.LITERAL().getText() + "\n"
+						+ "fstore_" + vId + "\n"; 			
+			}
+			else if (ctx.getChild(0).getText().equals("double")){
+				symbolTable.putLocalVarWithInitVal(getLocalVarName(ctx), Type.DOUBLE, initVal(ctx, Type.DOUBLE));
+				String vId = symbolTable.getVarId(ctx);
+				varDecl += "ldc " + ctx.LITERAL().getText() + "\n"
+						+ "dstore_" + vId + "\n"; 			
+			}
+//			else {
+//				System.out.println("<ERROR: init value not valid>");
+//			}
+		}
+		else {
+			if (ctx.type_spec().getText().equals("int")) {
+				symbolTable.putLocalVar(getLocalVarName(ctx), Type.INT);
+				String vId = symbolTable.getVarId(ctx);
+				varDecl += "istore_" + vId + "\n";
+			}
+			else if (ctx.type_spec().getText().equals("float")) {
+				symbolTable.putLocalVar(getLocalVarName(ctx), Type.FLOAT);
+				String vId = symbolTable.getVarId(ctx);
+				varDecl += "fstore_" + vId + "\n";
+			}
+			else if (ctx.type_spec().getText().equals("double")) {
+				symbolTable.putLocalVar(getLocalVarName(ctx), Type.DOUBLE);
+				String vId = symbolTable.getVarId(ctx);
+				varDecl += "dstore_" + vId + "\n";
+			}
 		}
 		
 		newTexts.put(ctx, varDecl);
@@ -352,7 +414,15 @@ public class BytecodeGenListener extends MiniCBaseListener implements ParseTreeL
 				stmt += "dreturn\n";
 				newTexts.put(ctx, stmt);
 				
-			} else {
+			} 
+			else if (symbolTable.getVarType(ctx.expr().getText()) == Type.FLOAT) {
+				String stmt = "";
+				stmt += newTexts.get(ctx.expr());
+				stmt += "freturn\n";
+				newTexts.put(ctx, stmt);
+				
+			} 
+			else {
 				String stmt = "";
 				stmt += newTexts.get(ctx.expr());
 				stmt += "ireturn\n";
@@ -393,46 +463,57 @@ public class BytecodeGenListener extends MiniCBaseListener implements ParseTreeL
 				else if(symbolTable.getVarType(idName) == Type.DOUBLE) {
 					expr += "dload_" + symbolTable.getVarId(idName) + " \n";
 				}
+				else if(symbolTable.getVarType(idName) == Type.FLOAT) {
+					expr += "fload_" + symbolTable.getVarId(idName) + " \n";
+				}
 				//else	// Type int array => Later! skip now..
 				//	expr += "           lda " + symbolTable.get(ctx.IDENT().getText()).value + " \n";
 				
-				} else if (ctx.LITERAL() != null) {
-					String literalStr = ctx.LITERAL().getText();
-					expr += "ldc " + literalStr + " \n";
-				}
+			} else if (ctx.LITERAL() != null) {
+				String literalStr = ctx.LITERAL().getText();
+				expr += "ldc " + literalStr + " \n";
+			}
 				
 				
-			} 
+		} 
 		else if(ctx.getChildCount() == 2) { // UnaryOperation
-			expr = handleUnaryExpr(ctx, newTexts.get(ctx) + expr);			
+			expr += handleUnaryExpr(ctx, newTexts.get(ctx) + expr);			
 		}
 		else if(ctx.getChildCount() == 3) {	 
 			if(ctx.getChild(0).getText().equals("(")) { 		// '(' expr ')'
-				expr = newTexts.get(ctx.expr(0));
+				expr += newTexts.get(ctx.expr(0));
 				
 			} else if(ctx.getChild(1).getText().equals("=")) { 	// IDENT '=' expr
 				
 				String idName = ctx.IDENT().getText();
 				
 				if (symbolTable.getVarType(idName) == Type.DOUBLE) {
-					expr = newTexts.get(ctx.expr(0))
+					expr += newTexts.get(ctx.expr(0))
 							+ "dstore_" + symbolTable.getVarId(ctx.IDENT().getText()) + " \n";
+//					System.out.println(expr);
 					
-				} else {
-					expr = newTexts.get(ctx.expr(0))
+				} 
+				else if (symbolTable.getVarType(idName) == Type.FLOAT) {
+					expr += newTexts.get(ctx.expr(0))
+							+ "fstore_" + symbolTable.getVarId(ctx.IDENT().getText()) + " \n";
+//					System.out.println(expr);
+				}
+				else {
+					expr += newTexts.get(ctx.expr(0))
 							+ "istore_" + symbolTable.getVarId(ctx.IDENT().getText()) + " \n";
+//					System.out.println(expr);
 				}
 				
 				
 			} else { 											// binary operation
-				expr = handleBinExpr(ctx, expr);
+				expr += handleBinExpr(ctx, expr);
 				
 			}
 		}
 		// IDENT '(' args ')' |  IDENT '[' expr ']'
 		else if(ctx.getChildCount() == 4) {
 			if(ctx.args() != null){		// function calls
-				expr = handleFunCall(ctx, expr);
+				expr += handleFunCall(ctx, expr);
 			} else { // expr
 				// Arrays: TODO  
 				
@@ -490,7 +571,33 @@ public class BytecodeGenListener extends MiniCBaseListener implements ParseTreeL
 				break;
 				
 			}
-		} else {
+		} else if (symbolTable.getVarType(idName) == Type.FLOAT) {
+			
+			switch(ctx.getChild(0).getText()) {
+			
+			
+			case "-":
+				expr += "           fneg \n"; break;
+			case "--":
+				expr += "ldc 1" + "\n"
+						+ "fsub" + "\n";
+				break;
+			case "++":
+				expr += "ldc 1" + "\n"
+						+ "fadd" + "\n";
+				break;
+			case "!":
+				expr += "ifeq " + l2 + "\n"
+						+ l1 + ": " + "ldc 0" + "\n"
+						+ "goto " + lend + "\n"
+						+ l2 + ": " + "ldc 1" + "\n"
+						+ lend + ": " + "\n";
+				
+				break;
+				
+			}
+		}
+		else {
 			switch(ctx.getChild(0).getText()) {
 			
 			
@@ -617,7 +724,91 @@ public class BytecodeGenListener extends MiniCBaseListener implements ParseTreeL
 				break;
 
 		}
-		} else {
+		} else if (symbolTable.getVarType(idName) == Type.FLOAT) {
+			switch (ctx.getChild(1).getText()) {
+			case "*":
+				expr += "fmul \n"; break;
+			case "/":
+				expr += "fdiv \n"; break;
+			case "%":
+				expr += "frem \n"; break;
+			case "+":		// expr(0) expr(1) iadd
+				expr += "fadd \n"; break;
+			case "-":
+				expr += "fsub \n"; break;
+				
+			case "==":
+				expr += "fsub " + "\n"
+						+ "ifeq l2"+ "\n"
+						+ "ldc 0" + "\n"
+						+ "goto " + lend + "\n"
+						+ l2 + ": " + "ldc 1" + "\n"
+						+ lend + ": " + "\n";
+				break;
+			case "!=":
+				expr += "fsub " + "\n"
+						+ "ifne l2"+ "\n"
+						+ "ldc 0" + "\n"
+						+ "goto " + lend + "\n"
+						+ l2 + ": " + "ldc 1" + "\n"
+						+ lend + ": " + "\n";
+				break;
+			case "<=":
+				// <(5) Fill here>
+				expr += "fsub " + "\n"
+						+ "ifle " + l2 + "\n"
+						+ "ldc 0" + "\n"
+						+ "goto " + lend + "\n"
+						+ l2 + ": \n" + "ldc 1" + "\n"
+						+ lend + ": " + "\n";
+				
+				break;
+			case "<":
+				// <(6) Fill here>
+				expr += "fsub " + "\n"
+						+ "iflt " + l2 + "\n"
+						+ "ldc 0" + "\n"
+						+ "goto " + lend + "\n"
+						+ l2 + ": \n" + "ldc 1" + "\n"
+						+ lend + ": " + "\n";
+				break;
+
+			case ">=":
+				// <(7) Fill here>
+				expr += "fsub " + "\n"
+						+ "ifge " + l2 + "\n"
+						+ "ldc 0" + "\n"
+						+ "goto " + lend + "\n"
+						+ l2 + ": \n" + "ldc 1" + "\n"
+						+ lend + ": " + "\n";
+
+				break;
+
+			case ">":
+				// <(8) Fill here>
+				expr += "fsub " + "\n"
+						+ "ifge " + l2 + "\n"
+						+ "ldc 0" + "\n"
+						+ "goto " + lend + "\n"
+						+ l2 + ": \n" + "ldc 1" + "\n"
+						+ lend + ": " + "\n";
+				break;
+
+			case "and":
+				expr +=  "ifne "+ lend + "\n"
+						+ "pop" + "\n" + "ldc 0" + "\n"
+						+ lend + ": " + "\n"; break;
+			case "or":
+				// <(9) Fill here>
+				//ldc 1
+				expr +=  "ifeq "+ lend + "\n"
+						+ "pop" + "\n" + "ldc 1" + "\n"
+						+ lend + ": " + "\n";
+				break;
+
+		}
+		}
+		else {
 			switch (ctx.getChild(1).getText()) {
 			case "*":
 				expr += "imul \n"; break;

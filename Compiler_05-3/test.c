@@ -1,10 +1,9 @@
-
-double abc() {
-	return 1.0;
-}
-
 void main () {
-	int a[];
-	a[0] = 10;
-	
-}
+	double a= 1.52;
+	float b = 1.22;
+
+	for (int i = 0; i < 100; i++) {
+		a = 0;
+	}
+	_print(a + k);
+

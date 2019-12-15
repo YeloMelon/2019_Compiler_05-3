@@ -12,19 +12,19 @@ import static listener.main.BytecodeGenListenerHelper.*;
 
 public class SymbolTable {
 	enum Type {
-		INT, INTARRAY, VOID, ERROR, DOUBLE
-		// string double ,,,
+		INT, INTARRAY, VOID, ERROR, DOUBLE ,FLOAT
+		//double ,,,
 	}
 	
 	static public class VarInfo {
 		Type type; 
 		int id;
-		int initVal;
+		Object initVal;
 		
-		public VarInfo(Type type,  int id, int initVal) {
+		public VarInfo(Type type,  int id, Object object) {
 			this.type = type;
 			this.id = id;
-			this.initVal = initVal;
+			this.initVal = object;
 		}
 		public VarInfo(Type type,  int id) {
 			this.type = type;
@@ -70,15 +70,15 @@ public class SymbolTable {
 		this._gsymtable.put(varname, new VarInfo(type, _globalVarID++));
 	}
 	
-	void putLocalVarWithInitVal(String varname, Type type, int initVar){
+	void putLocalVarWithInitVal(String varname, Type type, Object object){
 		//<Fill here 2>
 		//hash as (name, type) with init value
-		this._lsymtable.put(varname, new VarInfo(type, _localVarID++, initVar));
+		this._lsymtable.put(varname, new VarInfo(type, _localVarID++, object));
 	}
-	void putGlobalVarWithInitVal(String varname, Type type, int initVar){
+	void putGlobalVarWithInitVal(String varname, Type type, Object object){
 		//<Fill here 3>
 		//hash as (name, type) with init value
-		this._gsymtable.put(varname, new VarInfo(type, _globalVarID++, initVar));
+		this._gsymtable.put(varname, new VarInfo(type, _globalVarID++, object));
 	
 	}
 	
@@ -130,6 +130,9 @@ public class SymbolTable {
 		else if (ctx.type_spec().getText().equals("double"))
 			rtype += "D";
 		
+		else if (ctx.type_spec().getText().equals("float"))
+			rtype += "F";
+		
 		else
 			rtype += "I";//add()I
 
@@ -139,6 +142,9 @@ public class SymbolTable {
 				argtype += "V";//add(V)
 			else if (ctx.params().param(i).type_spec().getText().equals("double"))
 				argtype += "D";
+			else if (ctx.type_spec().getText().equals("float"))
+				rtype += "F";
+			
 			else//only void or integers at this time
 				argtype += "I";//add(I)
 		}
