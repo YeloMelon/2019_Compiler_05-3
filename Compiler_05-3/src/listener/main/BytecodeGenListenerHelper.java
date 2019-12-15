@@ -64,6 +64,7 @@ public class BytecodeGenListenerHelper {
 	}
 	
 	static boolean isIntReturn(MiniCParser.Return_stmtContext ctx) {
+		
 		return ctx.getChildCount() ==3;
 	}
 
@@ -85,6 +86,10 @@ public class BytecodeGenListenerHelper {
 		String type = typespec.getText(); 
 		if(type.compareTo("int") == 0)
 			return "I";
+		
+		else if(type.compareTo("double") == 0)
+			return "D";
+		
 		//other cases left for else statements 
 		return "";
 	}
@@ -99,6 +104,9 @@ public class BytecodeGenListenerHelper {
 	static Type getParamType(ParamContext param) {
 		if(param.getChild(0).getText().equals("int"))
 			return Type.INT;
+		
+		else if(param.getChild(0).getText().equals("double"))
+			return Type.DOUBLE;
 		
 		return null;
 	}

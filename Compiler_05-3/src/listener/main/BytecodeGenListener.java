@@ -46,10 +46,25 @@ public class BytecodeGenListener extends MiniCBaseListener implements ParseTreeL
 			symbolTable.putGlobalVar(varName, Type.INTARRAY);
 		}
 		else if (isDeclWithInit(ctx)) {
-			symbolTable.putGlobalVarWithInitVal(varName, Type.INT, initVal(ctx));
+			
+			if (ctx.type_spec().getText().equals("double")) {
+				
+				symbolTable.putGlobalVarWithInitVal(varName, Type.DOUBLE, initVal(ctx));
+				
+			} else {
+				symbolTable.putGlobalVarWithInitVal(varName, Type.INT, initVal(ctx));
+
+			}
+			
+			
 		}
 		else  { // simple decl
-			symbolTable.putGlobalVar(varName, Type.INT);
+			if (ctx.type_spec().getText().equals("double")) {
+				symbolTable.putGlobalVar(varName, Type.DOUBLE);
+			} else {
+				symbolTable.putGlobalVar(varName, Type.INT);
+			}
+			
 		}
 	}
 
@@ -60,10 +75,22 @@ public class BytecodeGenListener extends MiniCBaseListener implements ParseTreeL
 			symbolTable.putLocalVar(getLocalVarName(ctx), Type.INTARRAY);
 		}
 		else if (isDeclWithInit(ctx)) {
-			symbolTable.putLocalVarWithInitVal(getLocalVarName(ctx), Type.INT, initVal(ctx));	
+			if (ctx.type_spec().getText().equals("double")) {
+				symbolTable.putLocalVarWithInitVal(getLocalVarName(ctx), Type.DOUBLE, initVal(ctx));	
+			} else {
+				symbolTable.putLocalVarWithInitVal(getLocalVarName(ctx), Type.INT, initVal(ctx));	
+			}
+			
 		}
 		else  { // simple decl
-			symbolTable.putLocalVar(getLocalVarName(ctx), Type.INT);
+			
+			if (ctx.type_spec().getText().equals("double")) {
+				symbolTable.putLocalVar(getLocalVarName(ctx), Type.DOUBLE);
+			} else {
+				symbolTable.putLocalVar(getLocalVarName(ctx), Type.INT);
+			}
+			
+			
 		}	
 	}
 
@@ -117,6 +144,8 @@ public class BytecodeGenListener extends MiniCBaseListener implements ParseTreeL
 				stmt += newTexts.get(ctx.if_stmt());
 			else if(ctx.while_stmt() != null)
 				stmt += newTexts.get(ctx.while_stmt());
+			else if(ctx.for_stmt() != null)
+				stmt += newTexts.get(ctx.for_stmt());
 			else if(ctx.return_stmt() != null)
 				stmt += newTexts.get(ctx.return_stmt());
 			
@@ -139,6 +168,39 @@ public class BytecodeGenListener extends MiniCBaseListener implements ParseTreeL
 	// while_stmt	: WHILE '(' expr ')' stmt
 	@Override
 	public void exitWhile_stmt(MiniCParser.While_stmtContext ctx) {
+			// <(1) Fill here!>
+		
+		String stmt = "";
+		String expr = newTexts.get(ctx.expr());
+		String bodystmt = newTexts.get(ctx.stmt());
+		
+		String lend = symbolTable.newLabel(); //exit
+		String lelse = symbolTable.newLabel(); //goto 
+		
+			
+		if (ctx.getChildCount() == 5) {
+			// while_stmt	: WHILE '(' expr ')' stmt
+			
+			stmt += lelse //spot l2
+					+ ": \n" 
+					+ expr //check
+					+ "ifeq " 
+					+ lend //exit if eq
+					+ "\n" 
+					+ bodystmt //do
+					+ "goto " 
+					+ lelse //goto l2
+					+ "\n"
+					+ lend // exit
+					+ ": \n";
+		}
+		newTexts.put(ctx, stmt);
+		newTexts.put(ctx, stmt);
+	}
+	
+	// for_stmt	: for '(' expr ';' expr ';' expr ')' stmt
+	@Override
+	public void exitFor_stmt(MiniCParser.For_stmtContext ctx) {
 			// <(1) Fill here!>
 		
 		String stmt = "";
@@ -283,12 +345,29 @@ public class BytecodeGenListener extends MiniCBaseListener implements ParseTreeL
 			// <(4) Fill here>
 		if(isIntReturn(ctx)) {
 			//only int return here
-			String stmt = "";
-			stmt += newTexts.get(ctx.expr());
-			stmt += "ireturn\n";
-			newTexts.put(ctx, stmt);
+			
+			if (symbolTable.getVarType(ctx.expr().getText()) == Type.DOUBLE) {
+				String stmt = "";
+				stmt += newTexts.get(ctx.expr());
+				stmt += "dreturn\n";
+				newTexts.put(ctx, stmt);
+				
+			} else {
+				String stmt = "";
+				stmt += newTexts.get(ctx.expr());
+				stmt += "ireturn\n";
+				newTexts.put(ctx, stmt);
+
+			}
+			
 			//print ireturn after return expr
 		}
+//		else if(isDoubleReturn(ctx)){
+//			String stmt = "";
+//			stmt += newTexts.get(ctx.expr());
+//			stmt += "dreturn\n";
+//			newTexts.put(ctx, stmt);
+//		}
 		else if(isVoidReturn(ctx))
 			newTexts.put(ctx, "return\n");
 		//print return
@@ -305,18 +384,26 @@ public class BytecodeGenListener extends MiniCBaseListener implements ParseTreeL
 		}		
 		
 		if(ctx.getChildCount() == 1) { // IDENT | LITERAL
+			
 			if(ctx.IDENT() != null) {
 				String idName = ctx.IDENT().getText();
 				if(symbolTable.getVarType(idName) == Type.INT) {
 					expr += "iload_" + symbolTable.getVarId(idName) + " \n";
 				}
+				else if(symbolTable.getVarType(idName) == Type.DOUBLE) {
+					expr += "dload_" + symbolTable.getVarId(idName) + " \n";
+				}
 				//else	// Type int array => Later! skip now..
 				//	expr += "           lda " + symbolTable.get(ctx.IDENT().getText()).value + " \n";
+				
 				} else if (ctx.LITERAL() != null) {
 					String literalStr = ctx.LITERAL().getText();
 					expr += "ldc " + literalStr + " \n";
 				}
-			} else if(ctx.getChildCount() == 2) { // UnaryOperation
+				
+				
+			} 
+		else if(ctx.getChildCount() == 2) { // UnaryOperation
 			expr = handleUnaryExpr(ctx, newTexts.get(ctx) + expr);			
 		}
 		else if(ctx.getChildCount() == 3) {	 
@@ -324,8 +411,18 @@ public class BytecodeGenListener extends MiniCBaseListener implements ParseTreeL
 				expr = newTexts.get(ctx.expr(0));
 				
 			} else if(ctx.getChild(1).getText().equals("=")) { 	// IDENT '=' expr
-				expr = newTexts.get(ctx.expr(0))
-						+ "istore_" + symbolTable.getVarId(ctx.IDENT().getText()) + " \n";
+				
+				String idName = ctx.IDENT().getText();
+				
+				if (symbolTable.getVarType(idName) == Type.DOUBLE) {
+					expr = newTexts.get(ctx.expr(0))
+							+ "dstore_" + symbolTable.getVarId(ctx.IDENT().getText()) + " \n";
+					
+				} else {
+					expr = newTexts.get(ctx.expr(0))
+							+ "istore_" + symbolTable.getVarId(ctx.IDENT().getText()) + " \n";
+				}
+				
 				
 			} else { 											// binary operation
 				expr = handleBinExpr(ctx, expr);
@@ -338,11 +435,22 @@ public class BytecodeGenListener extends MiniCBaseListener implements ParseTreeL
 				expr = handleFunCall(ctx, expr);
 			} else { // expr
 				// Arrays: TODO  
+				
+				expr += "iload_" + symbolTable.getVarId(ctx.IDENT().getText()) + "\n"
+						+ "iload_" + symbolTable.getVarId(ctx.expr(0).getText()) + "\n"
+						+ "iaload" + "\n";
 			}
 		}
 		// IDENT '[' expr ']' '=' expr
 		else { // Arrays: TODO			*/
+			expr += "iload_" + symbolTable.getVarId(ctx.IDENT().getText()) + "\n"
+                    + newTexts.get(ctx.getChild(2))
+                    + newTexts.get(ctx.getChild(5))
+                    + "iastore" + "\n";
 		}
+		//int a[];
+		//a[0] = 10;
+		
 		newTexts.put(ctx, expr);
 	}
 
@@ -353,25 +461,61 @@ public class BytecodeGenListener extends MiniCBaseListener implements ParseTreeL
 		String lend = symbolTable.newLabel();
 		
 		expr += newTexts.get(ctx.expr(0));
-		switch(ctx.getChild(0).getText()) {
-		case "-":
-			expr += "           ineg \n"; break;
-		case "--":
-			expr += "ldc 1" + "\n"
-					+ "isub" + "\n";
-			break;
-		case "++":
-			expr += "ldc 1" + "\n"
-					+ "iadd" + "\n";
-			break;
-		case "!":
-			expr += "ifeq " + l2 + "\n"
-					+ l1 + ": " + "ldc 0" + "\n"
-					+ "goto " + lend + "\n"
-					+ l2 + ": " + "ldc 1" + "\n"
-					+ lend + ": " + "\n";
-			break;
+		
+		String idName = ctx.IDENT().getText();
+		//indent?
+		
+		if (symbolTable.getVarType(idName) == Type.DOUBLE) {
+			
+			switch(ctx.getChild(0).getText()) {
+			
+			
+			case "-":
+				expr += "           dneg \n"; break;
+			case "--":
+				expr += "ldc 1" + "\n"
+						+ "dsub" + "\n";
+				break;
+			case "++":
+				expr += "ldc 1" + "\n"
+						+ "dadd" + "\n";
+				break;
+			case "!":
+				expr += "ifeq " + l2 + "\n"
+						+ l1 + ": " + "ldc 0" + "\n"
+						+ "goto " + lend + "\n"
+						+ l2 + ": " + "ldc 1" + "\n"
+						+ lend + ": " + "\n";
+				
+				break;
+				
+			}
+		} else {
+			switch(ctx.getChild(0).getText()) {
+			
+			
+			case "-":
+				expr += "           ineg \n"; break;
+			case "--":
+				expr += "ldc 1" + "\n"
+						+ "isub" + "\n";
+				break;
+			case "++":
+				expr += "ldc 1" + "\n"
+						+ "iadd" + "\n";
+				break;
+			case "!":
+				expr += "ifeq " + l2 + "\n"
+						+ l1 + ": " + "ldc 0" + "\n"
+						+ "goto " + lend + "\n"
+						+ l2 + ": " + "ldc 1" + "\n"
+						+ lend + ": " + "\n";
+				
+				break;
+				
+			}
 		}
+		
 		return expr;
 	}
 
@@ -383,7 +527,98 @@ public class BytecodeGenListener extends MiniCBaseListener implements ParseTreeL
 		expr += newTexts.get(ctx.expr(0));
 		expr += newTexts.get(ctx.expr(1));
 		
-		switch (ctx.getChild(1).getText()) {
+		String idName = "";
+		if (ctx.expr(0).IDENT() != null) {
+			 idName = ctx.expr(0).IDENT().getText();
+		}
+		
+		//indent?
+		
+		if (symbolTable.getVarType(idName) == Type.DOUBLE) {
+			switch (ctx.getChild(1).getText()) {
+			case "*":
+				expr += "dmul \n"; break;
+			case "/":
+				expr += "ddiv \n"; break;
+			case "%":
+				expr += "drem \n"; break;
+			case "+":		// expr(0) expr(1) iadd
+				expr += "dadd \n"; break;
+			case "-":
+				expr += "dsub \n"; break;
+				
+			case "==":
+				expr += "dsub " + "\n"
+						+ "ifeq l2"+ "\n"
+						+ "ldc 0" + "\n"
+						+ "goto " + lend + "\n"
+						+ l2 + ": " + "ldc 1" + "\n"
+						+ lend + ": " + "\n";
+				break;
+			case "!=":
+				expr += "dsub " + "\n"
+						+ "ifne l2"+ "\n"
+						+ "ldc 0" + "\n"
+						+ "goto " + lend + "\n"
+						+ l2 + ": " + "ldc 1" + "\n"
+						+ lend + ": " + "\n";
+				break;
+			case "<=":
+				// <(5) Fill here>
+				expr += "dsub " + "\n"
+						+ "ifle " + l2 + "\n"
+						+ "ldc 0" + "\n"
+						+ "goto " + lend + "\n"
+						+ l2 + ": \n" + "ldc 1" + "\n"
+						+ lend + ": " + "\n";
+				
+				break;
+			case "<":
+				// <(6) Fill here>
+				expr += "dsub " + "\n"
+						+ "iflt " + l2 + "\n"
+						+ "ldc 0" + "\n"
+						+ "goto " + lend + "\n"
+						+ l2 + ": \n" + "ldc 1" + "\n"
+						+ lend + ": " + "\n";
+				break;
+
+			case ">=":
+				// <(7) Fill here>
+				expr += "dsub " + "\n"
+						+ "ifge " + l2 + "\n"
+						+ "ldc 0" + "\n"
+						+ "goto " + lend + "\n"
+						+ l2 + ": \n" + "ldc 1" + "\n"
+						+ lend + ": " + "\n";
+
+				break;
+
+			case ">":
+				// <(8) Fill here>
+				expr += "dsub " + "\n"
+						+ "ifge " + l2 + "\n"
+						+ "ldc 0" + "\n"
+						+ "goto " + lend + "\n"
+						+ l2 + ": \n" + "ldc 1" + "\n"
+						+ lend + ": " + "\n";
+				break;
+
+			case "and":
+				expr +=  "ifne "+ lend + "\n"
+						+ "pop" + "\n" + "ldc 0" + "\n"
+						+ lend + ": " + "\n"; break;
+			case "or":
+				// <(9) Fill here>
+				//ldc 1
+				expr +=  "ifeq "+ lend + "\n"
+						+ "pop" + "\n" + "ldc 1" + "\n"
+						+ lend + ": " + "\n";
+				break;
+
+		}
+		} else {
+			switch (ctx.getChild(1).getText()) {
 			case "*":
 				expr += "imul \n"; break;
 			case "/":
@@ -465,6 +700,8 @@ public class BytecodeGenListener extends MiniCBaseListener implements ParseTreeL
 				break;
 
 		}
+		}
+		
 		return expr;
 	}
 	private String handleFunCall(MiniCParser.ExprContext ctx, String expr) {

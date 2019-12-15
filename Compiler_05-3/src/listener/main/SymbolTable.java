@@ -12,7 +12,8 @@ import static listener.main.BytecodeGenListenerHelper.*;
 
 public class SymbolTable {
 	enum Type {
-		INT, INTARRAY, VOID, ERROR
+		INT, INTARRAY, VOID, ERROR, DOUBLE
+		// string double ,,,
 	}
 	
 	static public class VarInfo {
@@ -123,15 +124,21 @@ public class SymbolTable {
 		
 		// <Fill here 7>	
 		
-		if(ctx.type_spec().getText().equals("VOID"))
+		if(ctx.type_spec().getText().equals("void"))
 			rtype += "V";//add()V
+		
+		else if (ctx.type_spec().getText().equals("double"))
+			rtype += "D";
+		
 		else
 			rtype += "I";//add()I
-		//only void or integers at this time 
+
 		
 		for(int i = 0; i < ctx.params().param().size(); i++) {
-			if(ctx.params().param(i).type_spec().getText().equals("VOID"))
+			if(ctx.params().param(i).type_spec().getText().equals("void"))
 				argtype += "V";//add(V)
+			else if (ctx.params().param(i).type_spec().getText().equals("double"))
+				argtype += "D";
 			else//only void or integers at this time
 				argtype += "I";//add(I)
 		}

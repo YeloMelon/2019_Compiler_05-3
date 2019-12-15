@@ -22,10 +22,6 @@ public class Translator {
 				|| args[0].startsWith("-B"))
 			return OPTIONS.BYTECODEGEN;
 		
-		if (args[0].startsWith("-u") 
-				|| args[0].startsWith("-U"))
-			return OPTIONS.UCODEGEN;
-		
 		return OPTIONS.ERROR;
 	}
 	
@@ -45,9 +41,7 @@ public class Translator {
 			case BYTECODEGEN:
 				walker.walk(new BytecodeGenListener(), tree );
 				break;
-//			case UCODEGEN:
-//				walker.walk(new UCodeGenListener(), tree );
-//				break;
+
 			default:
 				break;
 		}

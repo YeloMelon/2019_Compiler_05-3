@@ -11,20 +11,23 @@ var_decl	:  type_spec IDENT ';'
 		| type_spec IDENT '=' LITERAL ';'	
 		| type_spec IDENT '[' LITERAL ']' ';'	;
 type_spec	: VOID				
-		| INT				;
+		| INT		
+		| DOUBLE		;
 fun_decl	: type_spec IDENT '(' params ')' compound_stmt ;
 params		: param (',' param)*		
 		| VOID				
-		|			;
+			;
 param		: type_spec IDENT		
 		| type_spec IDENT '[' ']'	;
 stmt		: expr_stmt			
 		| compound_stmt			
 		| if_stmt			
 		| while_stmt			
+		| for_stmt
 		| return_stmt			;
 expr_stmt	: expr ';'			;
 while_stmt	: WHILE '(' expr ')' stmt	;
+for_stmt	: FOR '(' expr ';' expr ';' expr ')' stmt ;
 compound_stmt: '{' local_decl* stmt* '}'	;
 local_decl	: type_spec IDENT ';'
 		| type_spec IDENT '=' LITERAL ';'	
@@ -63,8 +66,10 @@ args	: expr (',' expr)*
 
 VOID: 'void';
 INT: 'int';
+DOUBLE: 'double';
 
 WHILE: 'while';
+FOR: 'for';
 IF: 'if';
 ELSE: 'else';
 RETURN: 'return';
@@ -81,7 +86,7 @@ IDENT  : [a-zA-Z_]
         )*;
 
 
-LITERAL:   DecimalConstant     |   OctalConstant     |   HexadecimalConstant     ;
+LITERAL:   DecimalConstant     |   OctalConstant     |   HexadecimalConstant    |  DoubleConstant;
 
 
 DecimalConstant
@@ -95,6 +100,10 @@ OctalConstant
 
 HexadecimalConstant
     :   '0' [xX] [0-9a-fA-F] +
+    ;
+    
+DoubleConstant
+    :   [0-9]* '.' [0-9]+
     ;
 
 WS  :   (   ' '

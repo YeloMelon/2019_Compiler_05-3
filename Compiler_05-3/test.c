@@ -1,10 +1,10 @@
-int add(int x, int y) {
-	int z ;
-	z = x+y;
-	return z;
+
+double abc() {
+	return 1.0;
 }
 
 void main () {
-	int t = 33;  
-	_print(add(1,t));
+	int a[];
+	a[0] = 10;
+	
 }
