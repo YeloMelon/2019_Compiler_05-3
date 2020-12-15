@@ -3,4 +3,5 @@ void main() {
 	float b = 1.22;
 
 	_print(a + b);
+	a
 }
