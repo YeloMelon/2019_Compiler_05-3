@@ -4,4 +4,5 @@ void main() {
 
 	_print(a + b);
 	a
+		z
 }
